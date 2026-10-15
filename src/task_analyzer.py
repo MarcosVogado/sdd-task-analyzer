@@ -10,9 +10,10 @@ e retorna métricas de produtividade. Não persiste dados e não possui interfac
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from statistics import mean
 from typing import Any
 
@@ -201,3 +202,31 @@ def analyze_tasks(tarefas: list[Tarefa]) -> dict[str, Any]:
     }
     logger.info("Análise concluída com sucesso.")
     return resultado
+
+
+def _demonstracao() -> None:
+    """Executa uma análise de exemplo e imprime o resultado.
+
+    Ponto de execução para demonstração manual do módulo
+    (``python src/task_analyzer.py``). Não faz parte da lógica de negócio e
+    não altera o comportamento de ``analyze_tasks`` quando o módulo é importado.
+    """
+
+    def utc(ano: int, mes: int, dia: int, hora: int = 0) -> datetime:
+        return datetime(ano, mes, dia, hora, tzinfo=timezone.utc)
+
+    exemplo: list[Tarefa] = [
+        Tarefa(1, "alta", "concluida", utc(2026, 1, 1, 8), utc(2026, 1, 1, 12),
+               data_inicio=utc(2026, 1, 1, 9), data_conclusao=utc(2026, 1, 1, 11)),
+        Tarefa(2, "media", "concluida", utc(2026, 1, 1, 8), utc(2026, 1, 1, 12),
+               data_inicio=utc(2026, 1, 1, 10), data_conclusao=utc(2026, 1, 1, 14)),
+        Tarefa(3, "baixa", "pendente", utc(2026, 1, 1, 8), utc(2026, 1, 5, 12)),
+    ]
+
+    resultado = analyze_tasks(exemplo)
+    print(json.dumps(resultado, indent=2, ensure_ascii=False))
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    _demonstracao()
