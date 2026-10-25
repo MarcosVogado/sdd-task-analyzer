@@ -1,0 +1,12 @@
+# Orquestração local do TaskAnalyzer (Fase 3 — Bootcamp III).
+#   docker compose run --rm tests   -> executa o Test Harness isolado
+#   docker compose run --rm demo    -> executa a análise de demonstração
+services:
+  tests:
+    build: .
+    image: sdd-task-analyzer:latest
+
+  demo:
+    build: .
+    image: sdd-task-analyzer:latest
+    command: ["python", "src/task_analyzer.py"]

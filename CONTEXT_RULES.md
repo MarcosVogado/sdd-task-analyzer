@@ -2,7 +2,8 @@
 
 Regras rígidas fornecidas ao assistente de IA para garantir alinhamento,
 consistência e qualidade do código gerado para o módulo **TaskAnalyzer**.
-Devem ser lidas em conjunto com o contrato em `specs/task_analyzer_spec.md`.
+Devem ser lidas em conjunto com o contrato em `specs/task_analyzer_spec.md`
+e com os requisitos rastreáveis em `specs/requirements.yaml`.
 
 ## 1. Diretrizes Arquiteturais (Obrigatórias)
 
@@ -37,3 +38,20 @@ Devem ser lidas em conjunto com o contrato em `specs/task_analyzer_spec.md`.
 - Todo código gerado é revisado criticamente pelo desenvolvedor humano antes
   de ser aceito (homologação).
 - Respostas que violem as proibições ou o contrato devem ser rejeitadas.
+
+## 4. Governança de Pipeline e Infraestrutura (Fase 3)
+
+- ❌ Não desabilitar, pular (`skip`/`xfail`) ou condicionar testes para obter
+  build verde — build vermelho é sinal de violação do contrato, não um
+  obstáculo a contornar.
+- ❌ Não alterar `.github/workflows/ci.yml`, `Dockerfile` ou
+  `docker-compose.yml` fora de Pull Request revisado.
+- ❌ Não adicionar dependências sem registrá-las em `requirements.txt` com
+  **versão fixada** e aprovação humana.
+- ❌ Não incluir segredos, tokens ou credenciais no repositório nem na imagem.
+- Toda alteração entra por `feature/*` → Pull Request para `develop` com CI
+  verde; `main` recebe código apenas a partir de `develop`.
+- Todo requisito novo deve ser registrado em `specs/requirements.yaml` com o
+  teste que o comprova (rastreabilidade requisito ↔ teste).
+- Rastreabilidade de prompts: o corpo do PR registra o assistente de IA
+  utilizado e o objetivo do prompt.
