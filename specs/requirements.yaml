@@ -1,0 +1,98 @@
+# Requisitos rastreáveis do TaskAnalyzer — versão legível por máquina do contrato SDD.
+# Fonte da verdade humana: specs/task_analyzer_spec.md (renderizada em
+# specs/system_design_document.pdf). Cada requisito aponta para o(s) teste(s)
+# do Test Harness que o comprovam — rastreabilidade requisito <-> teste.
+projeto: sdd-task-analyzer
+modulo: TaskAnalyzer
+versao_especificacao: "3.0"
+fase: 3
+linguagem: "Python >= 3.11"
+
+contrato:
+  funcao_publica: "analyze_tasks(tarefas: list[Tarefa]) -> dict[str, Any]"
+  excecao: TaskValidationError
+  entrada:
+    id_tarefa:      {tipo: int, obrigatorio: true, restricao: "> 0"}
+    prioridade:     {tipo: str, obrigatorio: true, enum: [baixa, media, alta]}
+    status:         {tipo: str, obrigatorio: true, enum: [concluida, pendente, cancelada]}
+    data_criacao:   {tipo: datetime, fuso: UTC, obrigatorio: true}
+    prazo:          {tipo: datetime, fuso: UTC, obrigatorio: true}
+    titulo:         {tipo: "str | None", obrigatorio: false}
+    data_inicio:    {tipo: "datetime | None", fuso: UTC, obrigatorio: "quando status = concluida"}
+    data_conclusao: {tipo: "datetime | None", fuso: UTC, obrigatorio: "quando status = concluida"}
+  saida:
+    total_tarefas: int
+    total_concluidas: int
+    total_pendentes: int
+    tempo_medio_conclusao_horas: float
+    taxa_atraso_percentual: float
+    indicadores_por_prioridade: "dict[baixa|media|alta, {tempo_medio_conclusao_horas, taxa_atraso_percentual}]"
+  arredondamento: 2
+
+requisitos_funcionais:
+  - id: RF01
+    descricao: Calcular contagens totais (tarefas, concluídas, pendentes).
+    testes: [test_cenario1_metricas_gerais, test_borda_lista_vazia]
+  - id: RF02
+    descricao: Calcular o tempo médio de conclusão, em horas, das tarefas concluídas.
+    testes: [test_cenario1_metricas_gerais]
+  - id: RF03
+    descricao: Calcular a taxa de atraso (concluídas com data_conclusao > prazo).
+    testes: [test_cenario1_metricas_gerais, test_atraso_contabilizado_corretamente]
+  - id: RF04
+    descricao: Calcular os indicadores agrupados por prioridade.
+    testes: [test_cenario1_indicadores_por_prioridade]
+
+regras_de_negocio:
+  - id: RN01
+    descricao: Apenas tarefas concluídas entram em tempo médio e taxa de atraso.
+    testes: [test_cenario1_metricas_gerais]
+  - id: RN02
+    descricao: Tarefas canceladas são ignoradas nas métricas.
+    testes: [test_canceladas_sao_ignoradas]
+  - id: RN03
+    descricao: Tarefas pendentes entram apenas nas contagens.
+    testes: [test_borda_apenas_pendentes]
+  - id: RN04
+    descricao: Entrada vazia ou sem concluídas retorna 0.0, sem exceção (prevenção de divisão por zero).
+    testes: [test_borda_lista_vazia, test_borda_apenas_pendentes]
+  - id: RN05
+    descricao: Datas inconsistentes disparam TaskValidationError.
+    testes: [test_cenario2_datas_inconsistentes]
+  - id: RN06
+    descricao: Prioridade ou status fora do enum disparam TaskValidationError.
+    testes: [test_cenario2_status_invalido, test_cenario2_prioridade_invalida]
+  - id: RN07
+    descricao: Tarefa concluída sem data_inicio ou data_conclusao dispara TaskValidationError.
+    testes: [test_cenario2_concluida_sem_datas]
+
+requisitos_nao_funcionais:
+  - id: RNF01
+    descricao: Execução reprodutível em container isolado (python:3.11-slim).
+    evidencia: [Dockerfile, docker-compose.yml]
+  - id: RNF02
+    descricao: Integração contínua em push e Pull Request nas branches main e develop.
+    evidencia: [.github/workflows/ci.yml]
+  - id: RNF03
+    descricao: Nenhuma dependência além das autorizadas, com versão fixada.
+    evidencia: [requirements.txt]
+  - id: RNF04
+    descricao: Sem persistência de dados e sem interface gráfica.
+    evidencia: [src/task_analyzer.py, CONTEXT_RULES.md]
+
+cenarios_de_aceite:
+  - id: CA01
+    nome: Sucesso — métricas corretas
+    requisitos: [RF01, RF02, RF03, RF04, RN01]
+  - id: CA02
+    nome: Exceção — entradas inválidas
+    requisitos: [RN05, RN06, RN07]
+  - id: CA03
+    nome: Canceladas ignoradas
+    requisitos: [RN02]
+  - id: CA04
+    nome: Contabilização correta de atraso
+    requisitos: [RF03]
+  - id: CA05
+    nome: Bordas — vazio e apenas pendentes
+    requisitos: [RN03, RN04]
