@@ -137,7 +137,7 @@ def _metricas(concluidas: list[Tarefa]) -> dict[str, float]:
 
     return {
         "tempo_medio_conclusao_horas": round(mean(duracoes_horas), 2),
-        "taxa_atraso_percentual": round(atrasadas / len(concluidas) * 100, 2),
+        "taxa_atraso_percentual": round(atrasadas / len(concluidas) * 100, 1),
     }
 
 
